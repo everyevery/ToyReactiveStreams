@@ -7,8 +7,11 @@ import org.reactivestreams.tck.TestEnvironment;
 
 public class ToyPublisherTest extends PublisherVerification<Integer> {
 
+    public static final long DEFAULT_TIMEOUT_MILLIS = 300L;
+    public static final long PUBLISHER_REFERENCE_CLEANUP_TIMEOUT_MILLIS = 500L;
+
     public ToyPublisherTest() {
-        super(new TestEnvironment());
+        super(new TestEnvironment(DEFAULT_TIMEOUT_MILLIS, true), PUBLISHER_REFERENCE_CLEANUP_TIMEOUT_MILLIS);
     }
 
     @Override
@@ -28,7 +31,6 @@ public class ToyPublisherTest extends PublisherVerification<Integer> {
     }
 
     // ADDITIONAL CONFIGURATION
-
     @Override
     public long maxElementsFromPublisher() {
         return Integer.MAX_VALUE;
