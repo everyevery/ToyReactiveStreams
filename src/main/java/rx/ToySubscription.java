@@ -9,6 +9,8 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static java.lang.Thread.yield;
+
 @Slf4j
 @Data
 public class ToySubscription implements Subscription {
@@ -33,24 +35,21 @@ public class ToySubscription implements Subscription {
 
     @Override
     public void request(long n) {
-        log.info("request({}) {}", n, remained);
+        log.debug("request({})", n);
 
         if (n <= 0) {
-            log.info("request({}) exit0 {}", n, remained);
-
             subscriber.onError(new IllegalArgumentException("3.9"));
             return;
         }
 
         if (cancelled) {
-            log.info("request({}) exit1 {}", n, remained);
             return;
         }
 
         requestedCount += n;
 
         if (active) {
-            log.info("{} - request({}) exit2 {}", Thread.currentThread().getName(), n, remained);
+            yield();
             return;
         }
 
@@ -66,13 +65,12 @@ public class ToySubscription implements Subscription {
                         subscriber.onComplete();
                         return;
                     } else {
-                        log.info("{} - subscribe.onNext BEFORE", Thread.currentThread().getName());
                         subscriber.onNext(remained);
-                        log.info("subscribe.onNext AFTER");
                     }
                     requestedCount--;
                     remained--;
                 }
+                yield();
 //                int duration = random.nextInt(MAX_SLEEP_DURATION)+1;
 //                try {
 //                    Thread.sleep((long)duration);
@@ -86,6 +84,7 @@ public class ToySubscription implements Subscription {
 
     @Override
     public void cancel() {
+        log.debug("cancel()");
         if (cancelled) {
             return;
         }

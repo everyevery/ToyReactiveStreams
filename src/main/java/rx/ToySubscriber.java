@@ -23,7 +23,7 @@ public class ToySubscriber implements Subscriber<Integer> {
 
     @Override
     public void onSubscribe(Subscription s) {
-        log.info("{} - {}.onSubscribe({})", name, Thread.currentThread().getName(), s);
+        log.debug("{} - {}.onSubscribe({})", name, Thread.currentThread().getName(), s);
         if (Objects.isNull(s)) {
             throw new NullPointerException();
         }
@@ -34,7 +34,7 @@ public class ToySubscriber implements Subscriber<Integer> {
 
     @Override
     public void onNext(Integer integer) {
-        log.info("{} - {}.onNext({})", name, Thread.currentThread().getName(), integer);
+        log.debug("{} - {}.onNext({})", name, Thread.currentThread().getName(), integer);
         if (Objects.isNull(integer)) {
             throw new NullPointerException();
         }
@@ -46,7 +46,7 @@ public class ToySubscriber implements Subscriber<Integer> {
 
     @Override
     public void onError(Throwable t) {
-        log.info("{} - {}.onError({})", name, Thread.currentThread().getName(), t);
+        log.debug("{} - {}.onError({})", name, Thread.currentThread().getName(), t);
         if (Objects.isNull(t)) {
             throw new NullPointerException();
         }
@@ -54,7 +54,7 @@ public class ToySubscriber implements Subscriber<Integer> {
 
     @Override
     public void onComplete() {
-        log.info("{} - {}.onComplete()", name, Thread.currentThread().getName());
+        log.debug("{} - {}.onComplete()", name, Thread.currentThread().getName());
     }
 
     private void setCountRandomly() {

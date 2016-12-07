@@ -16,7 +16,7 @@ public class ToyPublisher implements Publisher<Integer> {
     private int complete;
 
     public ToyPublisher() {
-        this(1, -1, -1);
+        this(-1);
     }
 
     public ToyPublisher(int size) {
@@ -24,15 +24,18 @@ public class ToyPublisher implements Publisher<Integer> {
     }
 
     public ToyPublisher(int size, int error, int complete) {
-        this.remained = size > 0 ? size : 1;
+        this.remained = size;
         this.error = error;
         this.complete = complete;
     }
 
     @Override
     public void subscribe(Subscriber<? super Integer> s) {
-        log.info("{} - subscribe({})", Thread.currentThread().getName(), s);
+        log.debug("{} - subscribe({})", Thread.currentThread().getName(), s);
         Subscription subscription = new ToySubscription(s, remained, error, complete);
-        s.onSubscribe(subscription);
+            s.onSubscribe(subscription);
+        if (remained <= 0) {
+            s.onError(new RuntimeException("1.9 Wrong Input"));
+        }
     }
 }

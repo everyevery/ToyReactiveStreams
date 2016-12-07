@@ -7,7 +7,7 @@ import org.reactivestreams.tck.TestEnvironment;
 
 public class ToyPublisherTest extends PublisherVerification<Integer> {
 
-    public static final long DEFAULT_TIMEOUT_MILLIS = 300L;
+    public static final long DEFAULT_TIMEOUT_MILLIS = 100L;
     public static final long PUBLISHER_REFERENCE_CLEANUP_TIMEOUT_MILLIS = 500L;
 
     public ToyPublisherTest() {
@@ -21,7 +21,7 @@ public class ToyPublisherTest extends PublisherVerification<Integer> {
 
     @Override
     public Publisher<Integer> createFailedPublisher() {
-        return new ToyPublisher(1, 1, -1);
+        return new ToyPublisher(-1);
 //        return new ToyPublisher() {
 //            @Override
 //            public void subscribe(Subscriber<? super Integer> s) {
