@@ -1,91 +1,96 @@
 package rx;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Data
 public class ToySubscription implements Subscription {
-    private final static long MAX_SLEEP_DURATION = 1000L;
+    private final static int MAX_SLEEP_DURATION = 1000;
     private Subscriber<? super Integer> subscriber;
     private int remained;
     private int error;
-    private Random random;
-    private boolean active = true;
+    private int complete;
+    private boolean active = false;
+    private boolean cancelled = false;
+    private Random random = new Random(System.currentTimeMillis());
+    private long requestedCount = 0L;
+    private ExecutorService executorService;
 
-    public ToySubscription(Subscriber<? super Integer> subscriber, int remained, int error) {
+    public ToySubscription(Subscriber<? super Integer> subscriber, int remained, int error, int complete) {
         this.subscriber = subscriber;
         this.remained = remained;
         this.error = error;
-        this.random = new Random(System.currentTimeMillis());
+        this.complete = complete;
+        this.executorService = Executors.newSingleThreadExecutor();
     }
 
     @Override
     public void request(long n) {
-        if (!active) {
+        log.info("request({}) {}", n, remained);
+
+        if (n <= 0) {
+            log.info("request({}) exit0 {}", n, remained);
+
+            subscriber.onError(new IllegalArgumentException("3.9"));
             return;
         }
 
-        if (n <= 0) {
-            throw new IllegalArgumentException();
+        if (cancelled) {
+            log.info("request({}) exit1 {}", n, remained);
+            return;
         }
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        requestedCount += n;
+
+        if (active) {
+            log.info("{} - request({}) exit2 {}", Thread.currentThread().getName(), n, remained);
+            return;
+        }
+
+        active = true;
+
         executorService.submit(() -> {
-            long n2 = n;
-//            while (remained > 0) {
-                while (n2 > 0 && remained > 0) {
-                    log.info("{} - Event {} !!!", Thread.currentThread().getName(), remained);
+            while (remained > 0) {
+                if (requestedCount > 0) {
                     if (remained == error) {
                         subscriber.onError(new RuntimeException("Error!"));
+                        return;
+                    } else if (remained == complete) {
+                        subscriber.onComplete();
+                        return;
                     } else {
-                        subscriber.onNext(remained--);
-                        try {
-                            long duration = random.nextLong();
-                            if (duration < 0)
-                                duration = -duration;
-                            duration = (duration+1)%MAX_SLEEP_DURATION;
-                            log.info("{} - sleep({})", Thread.currentThread().getName(), duration);
-                            Thread.sleep(duration);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        log.info("{} - subscribe.onNext BEFORE", Thread.currentThread().getName());
+                        subscriber.onNext(remained);
+                        log.info("subscribe.onNext AFTER");
                     }
-                    n2--;
+                    requestedCount--;
+                    remained--;
                 }
-//            }
-            if (remained==0) {
-                subscriber.onComplete();
+//                int duration = random.nextInt(MAX_SLEEP_DURATION)+1;
+//                try {
+//                    Thread.sleep((long)duration);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
+            subscriber.onComplete();
         });
-
-//        try {
-//            log.info("attempt to shutdown executorService");
-//            executorService.shutdown();
-//        executorService.awaitTermination(10, TimeUnit.SECONDS);
-//        } catch (InterruptedException e) {
-//            log.warn("tasks interrupted", e);
-//        }
-//        finally {
-//            if (!executorService.isTerminated()) {
-//                log.warn("cancel non-finished tasks");
-//            }
-//            executorService.shutdownNow();
-//            log.info("shutdown finished");
-//        }
     }
 
     @Override
     public void cancel() {
-        if (!active) {
+        if (cancelled) {
             return;
         }
-        active = false;
+        cancelled = true;
+        subscriber = null;
 
     }
 }

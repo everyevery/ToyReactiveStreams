@@ -6,8 +6,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.Vector;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
 @Getter
@@ -15,22 +13,26 @@ public class ToyPublisher implements Publisher<Integer> {
 
     private int remained;
     private int error;
-    private ConcurrentLinkedQueue<Integer> queue;
+    private int complete;
 
-    public ToyPublisher(int size) {
-        this(size, -1);
+    public ToyPublisher() {
+        this(1, -1, -1);
     }
 
-    public ToyPublisher(int size, int error) {
-        this.remained = size;
+    public ToyPublisher(int size) {
+        this(size, -1, -1);
+    }
+
+    public ToyPublisher(int size, int error, int complete) {
+        this.remained = size > 0 ? size : 1;
         this.error = error;
+        this.complete = complete;
     }
 
     @Override
     public void subscribe(Subscriber<? super Integer> s) {
         log.info("{} - subscribe({})", Thread.currentThread().getName(), s);
-        Subscription subscription = new ToySubscription(s, remained, error);
+        Subscription subscription = new ToySubscription(s, remained, error, complete);
         s.onSubscribe(subscription);
-
     }
 }
