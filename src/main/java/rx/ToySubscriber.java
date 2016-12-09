@@ -9,12 +9,20 @@ import java.util.Random;
 
 @Slf4j
 public class ToySubscriber implements Subscriber<Integer> {
+    private final static int DEFAULT_CAPACITY = 100;
     private String name;
     private int capacity;
     private int count;
     private Random random;
     private Subscription subscription;
 
+    public ToySubscriber() {
+        this("", DEFAULT_CAPACITY);
+    }
+
+    public ToySubscriber(String name) {
+        this(name, DEFAULT_CAPACITY);
+    }
     public ToySubscriber(String name, int capacity) {
         this.name = name;
         this.capacity = capacity;
@@ -26,6 +34,10 @@ public class ToySubscriber implements Subscriber<Integer> {
         log.debug("{} - {}.onSubscribe({})", name, Thread.currentThread().getName(), s);
         if (Objects.isNull(s)) {
             throw new NullPointerException();
+        }
+        if (subscription != null) {
+            s.cancel();
+            return;
         }
         subscription = s;
         setCountRandomly();
